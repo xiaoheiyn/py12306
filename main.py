@@ -21,8 +21,8 @@ def main():
 
     ####### 运行任务
     Web.run()
-    Cdn.run()
-    User.run()
+    # Cdn.run()
+    # User.run()
     Query.run()
     if not Const.IS_TEST:
         while True:
