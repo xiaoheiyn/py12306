@@ -25,6 +25,7 @@ class UserJob:
     key = None
     user_name = ''
     password = ''
+    user_card = ''
     type = 'qr'
     user = None
     info = {}  # 用户信息
@@ -56,6 +57,7 @@ class UserJob:
         self.key = str(info.get('key'))
         self.user_name = info.get('user_name')
         self.password = info.get('password')
+        self.user_card = info.get('user_card')
         self.type = info.get('type')
 
     def update_user(self):
@@ -212,6 +214,7 @@ class UserJob:
         data = {
             'username': self.user_name,
             'password': self.password,
+            'user_card': self.user_card,
         }
         headers = {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36",

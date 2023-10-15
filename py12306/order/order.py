@@ -26,6 +26,7 @@ class DomBounding:
 class Browser:
     cookies = None
     post_data = None
+    iphone_number = ''
 
     def __init__(self) -> None:
         super().__init__()
@@ -122,15 +123,29 @@ class Browser:
             await page.focus('#J-login')
             await page.click('#J-login')
 
-            slide_btn = await page.waitForSelector('#nc_1_n1z', timeout=30000)
-            rect = await slide_btn.boundingBox()
-            pos = DomBounding(rect)
-            pos.x += pos.width / 2
-            pos.y += pos.height / 2
-            await page.mouse.move(pos.x, pos.y)
-            await page.mouse.down()
-            await page.mouse.move(pos.x + pos.width * 10, pos.y, steps=30)
-            await page.mouse.up()
+            # slide_btn = await page.waitForSelector('#nc_1_n1z', timeout=30000)
+            # rect = await slide_btn.boundingBox()
+            # pos = DomBounding(rect)
+            # pos.x += pos.width / 2
+            # pos.y += pos.height / 2
+            # await page.mouse.move(pos.x, pos.y)
+            # await page.mouse.down()
+            # await page.mouse.move(pos.x + pos.width * 10, pos.y, steps=30)
+            # await page.mouse.up()
+
+            await page.waitForSelector('#id_card', {'visible': True, 'timeout': 30000})
+            await page.type('#id_card', data['user_card'], {'delay': randint(10, 30)})  # 身份后4位
+            
+            if not self.iphone_number: # 手机验证码
+                await page.waitForFunction('!document.querySelector("#verification_code").classList.contains("btn-disabled")')
+                await page.click('#verification_code')
+                self.iphone_number = input(f'请输入用户（{data["username"]}）的手机验证码: ')
+
+            await page.waitForSelector('#code', timeout=30000)
+            await page.type('#code', self.iphone_number, {'delay': randint(10, 30)})  # 手机验证码
+            await page.focus('#sureClick')
+            await page.click('#sureClick')
+
             await page.evaluate(
             'async () => {let i = 3 * 10; while (!csessionid && i >= 0) await new Promise(resolve => setTimeout(resolve, 100), i--);}')
             await page.evaluate('JSON.stringify({session_id: csessionid, sig: sig})')

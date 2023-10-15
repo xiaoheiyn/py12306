@@ -20,9 +20,9 @@ def main():
     Query.check_before_run()
 
     ####### 运行任务
-    Web.run()
+    # Web.run()
     # Cdn.run()
-    # User.run()
+    User.run()
     Query.run()
     if not Const.IS_TEST:
         while True:
