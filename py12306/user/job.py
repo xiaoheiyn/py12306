@@ -293,7 +293,8 @@ class UserJob:
             if is_login:
                 self.save_user()
                 self.set_last_heartbeat()
-                return self.get_user_info()  # 检测应该是不会维持状态，这里再请求下个人中心看有没有用，01-10 看来应该是没用  01-22 有时拿到的状态 是已失效的再加上试试
+                return self.get_user_info() # 检测应该是不会维持状态，这里再请求下个人中心看有没有用，01-10 看来应该是没用  01-22 有时拿到的状态 是已失效的再加上试试
+            Browser().clear_iphone_number() # 检测到未登录需要清空手机验证码
             time.sleep(get_interval_num(self.sleep_interval))
         return is_login
 

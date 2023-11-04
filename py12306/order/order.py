@@ -87,6 +87,9 @@ class Browser:
         OrderLog.add_quick_log('正在识别滑动验证码...').flush()
         return asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
             self.__request_init_slide2(data))
+    
+    def clear_iphone_number(self): 
+        self.iphone_number = ''
 
     async def __request_init_slide2(self, data):
         from random import randint
