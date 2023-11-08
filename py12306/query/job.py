@@ -31,6 +31,7 @@ class Job:
     arrive_station_code = ''
     from_time = timedelta(hours=0)
     to_time = timedelta(hours=24)
+    open_time = ''
 
     account_key = 0
     allow_seats = []
@@ -76,7 +77,9 @@ class Job:
 
     def init_data(self, info):
         self.id = md5(info)
+
         self.left_dates = info.get('left_dates')
+        self.open_time = info.get('open_time')
         self.stations = info.get('stations')
         self.stations = [self.stations] if isinstance(self.stations, dict) else self.stations
         if not self.job_name:  # name 不能被修改
@@ -111,6 +114,13 @@ class Job:
         self.start()
 
     def start(self):
+
+        now = datetime.datetime.now()
+        if not self.open_time:
+            self.open_time = now.strftime("%H:%M:%S")
+        while now.strftime("%H:%M:%S") < self.open_time:
+                now = datetime.datetime.now()
+                time.sleep(0.0001)
         """
         处理单个任务
         根据日期循环查询, 展示处理时间
@@ -171,6 +181,7 @@ class Job:
             self.is_cdn = True
             return self.query.session.cdn_request(url, timeout=self.query_time_out, allow_redirects=False)
         self.is_cdn = False
+
         return self.query.session.get(url, timeout=self.query_time_out, allow_redirects=False)
 
     def handle_response(self, response):
