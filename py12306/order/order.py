@@ -92,7 +92,15 @@ class Browser:
             self.__request_init_slide2(data))
     
     def clear_iphone_number(self): 
-        self.iphone_number = ''
+        self.iphone_number = None
+
+    def query_db(self):
+        conn = sqlite3.connect('/Users/chenxiaohei/Library/Messages/chat.db')
+        cursor = conn.cursor()
+        cursor.execute("""SELECT text FROM message WHERE text LIKE '%【12306】验证码%' ORDER BY date DESC LIMIT 1""")
+        result = cursor.fetchall()
+        conn.close()
+        return result
 
     async def watch_file_and_query_db(self):
         last_modified = os.path.getmtime('/Users/chenxiaohei/Library/Messages/chat.db-wal')
@@ -103,11 +111,8 @@ class Browser:
             new_modified = os.path.getmtime('/Users/chenxiaohei/Library/Messages/chat.db-wal')
             if new_modified != last_modified:  # If the file has been modified
                 last_modified = new_modified
-                conn = sqlite3.connect('/Users/chenxiaohei/Library/Messages/chat.db')
-                cursor = conn.cursor()
-                cursor.execute("""SELECT text FROM message WHERE text LIKE '%【12306】验证码%' ORDER BY date DESC LIMIT 1""")
-                result = cursor.fetchall()
-                conn.close()
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(None, self.query_db)
                 if result:
                     match = re.search('验证码：(\d+)',result[0])
                     if match:
@@ -165,7 +170,9 @@ class Browser:
             # if self.iphone_number is None: # 手机验证码
             await page.waitForFunction('!document.querySelector("#verification_code").classList.contains("btn-disabled")')
             await page.click('#verification_code')
-            await self.watch_file_and_query_db()
+            loop = asyncio.get_event_loop()
+            task = loop.create_task(self.watch_file_and_query_db())
+            await task
                 # await self.get_local_message()
                 # self.iphone_number = input(f'请输入用户（{data["username"]}）的手机验证码: ')
 
