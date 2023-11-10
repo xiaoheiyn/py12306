@@ -1,5 +1,9 @@
 import asyncio
 import urllib
+import os
+import sqlite3
+import re
+
 
 # from py12306.config import UserType
 from pyppeteer import launch
@@ -21,12 +25,11 @@ class DomBounding:
         self.width = rect['width']
         self.height = rect['height']
 
-
 @singleton
 class Browser:
     cookies = None
     post_data = None
-    iphone_number = ''
+    iphone_number = None
 
     def __init__(self) -> None:
         super().__init__()
@@ -91,6 +94,26 @@ class Browser:
     def clear_iphone_number(self): 
         self.iphone_number = ''
 
+    async def watch_file_and_query_db(self):
+        last_modified = os.path.getmtime('/Users/chenxiaohei/Library/Messages/chat.db-wal')
+        
+        while True:
+            await asyncio.sleep(1)  # Wait for a while before checking again
+            print('watching file')
+            new_modified = os.path.getmtime('/Users/chenxiaohei/Library/Messages/chat.db-wal')
+            if new_modified != last_modified:  # If the file has been modified
+                last_modified = new_modified
+                conn = sqlite3.connect('/Users/chenxiaohei/Library/Messages/chat.db')
+                cursor = conn.cursor()
+                cursor.execute("""SELECT text FROM message WHERE text LIKE '%【12306】验证码%' ORDER BY date DESC LIMIT 1""")
+                result = cursor.fetchall()
+                conn.close()
+                if result:
+                    match = re.search('验证码：(\d+)',result[0])
+                    if match:
+                        self.iphone_number = match.group[1]  # Assuming the verification code is in the first column
+                        break
+
     async def __request_init_slide2(self, data):
         from random import randint
         """ 异步获取 """
@@ -139,10 +162,13 @@ class Browser:
             await page.waitForSelector('#id_card', {'visible': True, 'timeout': 30000})
             await page.type('#id_card', data['user_card'], {'delay': randint(10, 30)})  # 身份后4位
             
-            if not self.iphone_number: # 手机验证码
-                await page.waitForFunction('!document.querySelector("#verification_code").classList.contains("btn-disabled")')
-                await page.click('#verification_code')
-                self.iphone_number = input(f'请输入用户（{data["username"]}）的手机验证码: ')
+            # if self.iphone_number is None: # 手机验证码
+            await page.waitForFunction('!document.querySelector("#verification_code").classList.contains("btn-disabled")')
+            await page.click('#verification_code')
+            await self.watch_file_and_query_db()
+                # await self.get_local_message()
+                # self.iphone_number = input(f'请输入用户（{data["username"]}）的手机验证码: ')
+
 
             await page.waitForSelector('#code', timeout=30000)
             await page.type('#code', self.iphone_number, {'delay': randint(10, 30)})  # 手机验证码
