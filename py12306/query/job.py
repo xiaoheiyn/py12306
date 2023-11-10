@@ -114,13 +114,16 @@ class Job:
         self.start()
 
     def start(self):
+        # 预售整点判断执行
+        if self.open_time:
+            now = datetime.datetime.now()
+            open_time = datetime.datetime.strptime(self.open_time, "%H:%M:%S").replace(year=now.year, month=now.month, day=now.day)
+            # 计算需要等待的秒数
+            wait_seconds = (open_time - now).total_seconds() - 0.005
+            print(f"Waiting for {wait_seconds} seconds")
+            # 暂停执行直到指定的时间
+            time.sleep(wait_seconds)
 
-        now = datetime.datetime.now()
-        if not self.open_time:
-            self.open_time = now.strftime("%H:%M:%S")
-        while now.strftime("%H:%M:%S") < self.open_time:
-                now = datetime.datetime.now()
-                time.sleep(0.0001)
         """
         处理单个任务
         根据日期循环查询, 展示处理时间
