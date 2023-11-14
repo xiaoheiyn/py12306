@@ -16,6 +16,8 @@ from py12306.helpers.type import UserType, SeatType
 from py12306.log.common_log import CommonLog
 from py12306.log.order_log import OrderLog
 
+from aiohttp import web
+
 
 class DomBounding:
     def __init__(self, rect: dict) -> None:
@@ -24,6 +26,30 @@ class DomBounding:
         self.y = rect['y']
         self.width = rect['width']
         self.height = rect['height']
+
+class MyServer:
+    def __init__(self):
+        self.app = web.Application()
+        self.app.router.add_get('/get_code', self.handle_request)
+        self.request_event = asyncio.Event()  # 创建一个Event实例
+        self.request_data = None  # 存储请求数据
+
+    async def handle_request(self, request):
+        # 这里你可以添加你的逻辑处理，例如获取数据库中的验证码
+        # 假设你已经获取了验证码，我们将其存储在变量code中
+        code = "请求成功"
+        self.request_data = request.query.get('num')  # 存储请求数据
+        self.request_event.set()  # 设置Event，表示接口已被请求
+        return web.Response(text=str(code))
+
+    async def start(self):
+        runner = web.AppRunner(self.app)
+        await runner.setup()
+        site = web.TCPSite(runner, '0.0.0.0', 8080)
+        await site.start()
+
+    async def stop(self):
+        await self.app.shutdown()
 
 @singleton
 class Browser:
@@ -118,6 +144,16 @@ class Browser:
                     if match:
                         self.iphone_number = match.group(1)  # Assuming the verification code is in the first column
                         break
+    
+    async def open_server(self):
+        server = MyServer()
+        await server.start()
+        print('等待接收手机验证码短信中...')
+        await server.request_event.wait()
+        self.iphone_number = server.request_data
+        print(f"验证码：{self.iphone_number}")
+        await server.stop()
+        return self.iphone_number
 
     async def __request_init_slide2(self, data):
         from random import randint
@@ -172,12 +208,18 @@ class Browser:
             await page.click('#verification_code')
             
             # 利用mac与手机短信同步机制，监听短信数据库文件变化，获取验证码
-            loop = asyncio.get_event_loop()
-            task = loop.create_task(self.watch_file_and_query_db())
-            await task
+            # loop = asyncio.get_event_loop()
+            # task = loop.create_task(self.watch_file_and_query_db())
+            # await task
                 # await self.get_local_message()
                 # self.iphone_number = input(f'请输入用户（{data["username"]}）的手机验证码: ')
+            
 
+            # loop = asyncio.get_event_loop()
+            # task = loop.create_task(self.open_server())
+            # await task
+            # 配合iphone快捷指令使用
+            self.iphone_number = await self.open_server()
 
             await page.waitForSelector('#code', timeout=30000)
             await page.type('#code', self.iphone_number, {'delay': randint(10, 30)})  # 手机验证码
