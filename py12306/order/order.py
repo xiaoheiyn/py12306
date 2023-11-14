@@ -87,7 +87,7 @@ class Browser:
 
     def request_init_slide2(self, session, data):
         """ 处理滑块，拿到 session_id, sig """
-        OrderLog.add_quick_log('正在识别滑动验证码...').flush()
+        OrderLog.add_quick_log('正在获取手机验证码...').flush()
         return asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
             self.__request_init_slide2(data))
     
@@ -107,16 +107,16 @@ class Browser:
         
         while True:
             await asyncio.sleep(1)  # Wait for a while before checking again
-            print('watching file')
+            print('等待接收手机验证码短信中...')
             new_modified = os.path.getmtime('/Users/chenxiaohei/Library/Messages/chat.db-wal')
             if new_modified != last_modified:  # If the file has been modified
                 last_modified = new_modified
                 loop = asyncio.get_event_loop()
                 result = await loop.run_in_executor(None, self.query_db)
                 if result:
-                    match = re.search('验证码：(\d+)',result[0])
+                    match = re.search('验证码：(\d+)',result[0][0])
                     if match:
-                        self.iphone_number = match.group[1]  # Assuming the verification code is in the first column
+                        self.iphone_number = match.group(1)  # Assuming the verification code is in the first column
                         break
 
     async def __request_init_slide2(self, data):
@@ -154,15 +154,15 @@ class Browser:
             await page.focus('#J-login')
             await page.click('#J-login')
 
-            # slide_btn = await page.waitForSelector('#nc_1_n1z', timeout=30000)
-            # rect = await slide_btn.boundingBox()
-            # pos = DomBounding(rect)
-            # pos.x += pos.width / 2
-            # pos.y += pos.height / 2
-            # await page.mouse.move(pos.x, pos.y)
-            # await page.mouse.down()
-            # await page.mouse.move(pos.x + pos.width * 10, pos.y, steps=30)
-            # await page.mouse.up()
+        #     # slide_btn = await page.waitForSelector('#nc_1_n1z', timeout=30000)
+        #     # rect = await slide_btn.boundingBox()
+        #     # pos = DomBounding(rect)
+        #     # pos.x += pos.width / 2
+        #     # pos.y += pos.height / 2
+        #     # await page.mouse.move(pos.x, pos.y)
+        #     # await page.mouse.down()
+        #     # await page.mouse.move(pos.x + pos.width * 10, pos.y, steps=30)
+        #     # await page.mouse.up()
 
             await page.waitForSelector('#id_card', {'visible': True, 'timeout': 30000})
             await page.type('#id_card', data['user_card'], {'delay': randint(10, 30)})  # 身份后4位
@@ -170,6 +170,8 @@ class Browser:
             # if self.iphone_number is None: # 手机验证码
             await page.waitForFunction('!document.querySelector("#verification_code").classList.contains("btn-disabled")')
             await page.click('#verification_code')
+            
+            # 利用mac与手机短信同步机制，监听短信数据库文件变化，获取验证码
             loop = asyncio.get_event_loop()
             task = loop.create_task(self.watch_file_and_query_db())
             await task
@@ -186,9 +188,10 @@ class Browser:
             'async () => {let i = 3 * 10; while (!csessionid && i >= 0) await new Promise(resolve => setTimeout(resolve, 100), i--);}')
             await page.evaluate('JSON.stringify({session_id: csessionid, sig: sig})')
             self.cookies = await page.cookies()
-            OrderLog.add_quick_log('滑动验证码识别成功').flush()
+            OrderLog.add_quick_log('验证码输入成功').flush()
         except Exception as e:
-            OrderLog.add_quick_log('滑动验证码识别失败').flush()
+            print(e)
+            OrderLog.add_quick_log('验证码输入失败').flush()
         try:
             await page.close()
         except:
