@@ -117,7 +117,7 @@ class Job:
         # 预售整点判断执行
         if self.open_time:
             now = datetime.datetime.now()
-            open_time = datetime.datetime.strptime(self.open_time, "%H:%M:%S").replace(year=now.year, month=now.month, day=now.day)
+            open_time = datetime.datetime.strptime(self.open_time, "%Y-%m-%d %H:%M:%S")
             # 计算需要等待的秒数
             wait_seconds = (open_time - now).total_seconds() - 0.005
             print(f"Waiting for {wait_seconds} seconds")
