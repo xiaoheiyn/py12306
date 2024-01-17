@@ -208,9 +208,9 @@ class Browser:
             await page.click('#verification_code')
             
             # 利用mac与手机短信同步机制，监听短信数据库文件变化，获取验证码
-            # loop = asyncio.get_event_loop()
-            # task = loop.create_task(self.watch_file_and_query_db())
-            # await task
+            loop = asyncio.get_event_loop()
+            task = loop.create_task(self.watch_file_and_query_db())
+            await task
                 # await self.get_local_message()
                 # self.iphone_number = input(f'请输入用户（{data["username"]}）的手机验证码: ')
             
@@ -219,7 +219,7 @@ class Browser:
             # task = loop.create_task(self.open_server())
             # await task
             # 配合iphone快捷指令使用
-            self.iphone_number = await self.open_server()
+            # self.iphone_number = await self.open_server()
 
             await page.waitForSelector('#code', timeout=30000)
             await page.type('#code', self.iphone_number, {'delay': randint(10, 30)})  # 手机验证码
@@ -553,7 +553,7 @@ class Order:
             'key_check_isChange': self.user_ins.ticket_info_for_passenger_form['key_check_isChange'],
             'leftTicketStr': self.user_ins.ticket_info_for_passenger_form['leftTicketStr'],
             'train_location': self.user_ins.ticket_info_for_passenger_form['train_location'],
-            'choose_seats': '',
+            'choose_seats': '1F',
             'seatDetailType': '000',
             'whatsSelect': '1',
             'roomType': '00',

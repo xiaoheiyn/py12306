@@ -119,9 +119,11 @@ class Job:
             now = datetime.datetime.now()
             open_time = datetime.datetime.strptime(self.open_time, "%Y-%m-%d %H:%M:%S")
             # 计算需要等待的秒数
-            wait_seconds = (open_time - now).total_seconds() - 0.005
+            wait_seconds = (open_time - now).total_seconds() - 0.008
             print(f"Waiting for {wait_seconds} seconds")
             # 暂停执行直到指定的时间
+            if wait_seconds < 0: 
+                wait_seconds = 0
             time.sleep(wait_seconds)
 
         """

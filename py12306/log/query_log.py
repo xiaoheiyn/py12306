@@ -162,7 +162,7 @@ class QueryLog(BaseLog):
         self = cls()
         message = '>> 第 {query_count} 次查询 {job_name} {time}'.format(
             query_count=int(self.data.get('query_count', 0)) + 1,
-            job_name=job_name, time=time_now().strftime("%Y-%m-%d %H:%M:%S"))
+            job_name=job_name, time=time_now().strftime("%Y-%m-%d %H:%M:%S.%f"))
         self.add_log(message)
         self.refresh_data()
         if is_main_thread():
