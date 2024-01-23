@@ -66,19 +66,18 @@ class Query:
         # return # DEBUG
         QueryLog.init_data()
         stay_second(3)
-        # 多线程
-        while True:
-            if Config().QUERY_JOB_THREAD_ENABLED:  # 多线程
-                if not self.is_in_thread:
-                    self.is_in_thread = True
-                    create_thread_and_run(jobs=self.jobs, callback_name='run', wait=Const.IS_TEST)
-                if Const.IS_TEST: return
-                stay_second(self.retry_time)
-            else:
-                if not self.jobs: break
-                self.is_in_thread = False
-                jobs_do(self.jobs, 'run')
-                if Const.IS_TEST: return
+        
+            # if Config().QUERY_JOB_THREAD_ENABLED:  # 多线程
+            #     if not self.is_in_thread:
+            #         self.is_in_thread = True
+            #         create_thread_and_run(jobs=self.jobs, callback_name='run', wait=Const.IS_TEST)
+            #     if Const.IS_TEST: return
+            #     stay_second(self.retry_time)
+            # else:
+        if not self.jobs: return
+        self.is_in_thread = False
+        jobs_do(self.jobs, 'run')
+        if Const.IS_TEST: return
 
         # while True:
         #     app_available_check()

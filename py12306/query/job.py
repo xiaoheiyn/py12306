@@ -114,17 +114,6 @@ class Job:
         self.start()
 
     def start(self):
-        # 预售整点判断执行
-        if self.open_time:
-            now = datetime.datetime.now()
-            open_time = datetime.datetime.strptime(self.open_time, "%Y-%m-%d %H:%M:%S")
-            # 计算需要等待的秒数
-            wait_seconds = (open_time - now).total_seconds() - 0.008
-            print(f"Waiting for {wait_seconds} seconds")
-            # 暂停执行直到指定的时间
-            if wait_seconds < 0: 
-                wait_seconds = 0
-            time.sleep(wait_seconds)
 
         """
         处理单个任务
@@ -186,6 +175,14 @@ class Job:
             self.is_cdn = True
             return self.query.session.cdn_request(url, timeout=self.query_time_out, allow_redirects=False)
         self.is_cdn = False
+
+        now = datetime.datetime.now()
+        if(self.open_time):
+            while now.strftime("%Y-%m-%d %H:%M:%S") < self.open_time:
+                    now = datetime.datetime.now()
+                    time.sleep(0.0001)
+        
+        print(f'{datetime.datetime.now()}')
 
         return self.query.session.get(url, timeout=self.query_time_out, allow_redirects=False)
 
