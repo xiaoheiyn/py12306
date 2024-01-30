@@ -113,7 +113,6 @@ class Browser:
 
     def request_init_slide2(self, session, data):
         """ 处理滑块，拿到 session_id, sig """
-        OrderLog.add_quick_log('正在获取手机验证码...').flush()
         return asyncio.get_event_loop_policy().new_event_loop().run_until_complete(
             self.__request_init_slide2(data))
     
@@ -160,7 +159,7 @@ class Browser:
         """ 异步获取 """
         try:
             browser = await launch(headless=True, autoClose=True, handleSIGINT=False, handleSIGTERM=False,
-                                   handleSIGHUP=False, args=['--disable-infobars', '--no-sandbox'])
+                                   handleSIGHUP=False, args=['--disable-infobars', '--no-sandbox'], executablePath='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
             page = await browser.newPage()
             await page.setViewport({'width': 1200, 'height': 1080})
             await page.setRequestInterception(True)
